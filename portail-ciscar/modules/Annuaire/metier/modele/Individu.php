@@ -24,6 +24,7 @@ class Individu {
 	private $PasswordRgpd;
 	private $PasswordRgpdStatut;
 	private $LoginSage;
+	private $Newsletter;
 	public function __construct() {
 		// Info Generales
 		$this->ID = NULL;
@@ -48,6 +49,7 @@ class Individu {
 		$this->PasswordRgpd = '';
 		$this->PasswordRgpdStatut = 0;
 		$this->LoginSage = '';
+		$this->Newsletter = 0;
 	}
 	
 	// ###
@@ -105,6 +107,9 @@ class Individu {
 	public function getLoginSage() {
 		return $this->LoginSage;
 	}
+	public function getNewsletter() {
+		return $this->Newsletter;
+	}
 	
 	// ###
 	public function setID($newValue) {
@@ -160,6 +165,9 @@ class Individu {
 	}
 	public function setLoginSage($newValue) {
 		$this->LoginSage = $newValue;
+	}
+	public function setNewsletter($newValue) {
+		$this->Newsletter = $newValue;
 	}
 	
 	// ###
@@ -384,7 +392,7 @@ class Individu {
 	public function SQL_SELECT_Valid_MailRgpd() {
 		$query = sprintf ( "SELECT count(LoginRgpd) FROM annuaire_individu WHERE UPPER(LoginRgpd)=UPPER('%s') ",
 				 mysqli_real_escape_string ($_SESSION['LINK'] , $this->getLoginRgpd() ) );
-		
+
 		$result = mysqli_query ( $_SESSION['LINK'] ,$query ) or die ( mysqli_error ($_SESSION['LINK']) );
 		
 		if (mysqli_num_rows ( $result ) > 0)
@@ -472,31 +480,86 @@ class Individu {
 		
 		$this->PasswordRgpdStatut = 2;		
 	}
+	public function SQL_UPDATE_individu_Mail_Contact($annuaire) {
+		$sql = "UPDATE annuaire_individu SET Mail='%s', Newsletter = %s ";
+		$sql .= " WHERE Login='%s' and AnnuaireID = %s";
+		
+		$query = sprintf ( $sql,
+				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $this->Email ) ),
+				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $this->Newsletter ) ),
+				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $this->Login ) ),
+				$annuaire);
+		mysqli_query ($_SESSION['LINK'], $query ) or die ( mysqli_error ($_SESSION['LINK']) );
+
+	}
 	public function SQL_UPDATE_individu_Lost($status) {
 		$sql = "UPDATE annuaire_individu SET LoginRgpd='%s', PasswordRgpd='%s', PasswordRgpdStatut=".$status ;
 		$sql .= " WHERE UPPER(LoginRgpd) = UPPER('%s') ";
 		
+		if ($status == 1)
+			$password = $this->PasswordRgpd ;
+		else 
+			$password = substr($this->PasswordRgpd, 0,2).hash('sha256',$this->PasswordRgpd).$this->PasswordRgpd[strlen($this->PasswordRgpd)-1];
+		
 		$query = sprintf ( $sql,
-				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $this->LoginRgpd ) ),
-				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( substr($this->PasswordRgpd, 0,2).hash('sha256',$this->PasswordRgpd).$this->PasswordRgpd[strlen($this->PasswordRgpd)-1]) ),
+				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $this->LoginRgpd ) ),				
+				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $password)),
 				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $this->LoginRgpd ) ));
 
 		mysqli_query ($_SESSION['LINK'], $query ) or die ( mysqli_error ($_SESSION['LINK']) );
 		
 		$this->PasswordRgpdStatut = $status;
 	}
-	public function SQL_UPDATE_individu_Confirm() {
-		$sql = "UPDATE annuaire_individu SET PasswordRgpdStatut=2 ";
-		$sql .= " WHERE (UPPER(mail) = UPPER('%s') or UPPER(LoginRgpd) = UPPER('%s') )";
+
+	public function SQL_UPDATE_individu_Lost_Prestashop() {
 		
-		$query = sprintf ( $sql,
-				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $this->LoginRgpd ) ),
-				mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $this->LoginRgpd ) ));
+		$sql = "UPDATE annuaire_individu SET PasswordPrestashop='%s' " ;
+		$sql .= " WHERE UPPER(LoginRgpd) = UPPER('%s') ";
 		
-		mysqli_query ($_SESSION['LINK'], $query ) or die ( mysqli_error ($_SESSION['LINK']) );
-		
-		$this->PasswordRgpdStatut = 2;
+		$password = base64_encode( $this->PasswordRgpd );
+				
+				$query = sprintf ( $sql,
+						mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $password)),
+						mysqli_real_escape_string ($_SESSION['LINK'], stripslashes ( $this->LoginRgpd ) ));
+				
+				mysqli_query ($_SESSION['LINK'], $query ) or die ( mysqli_error ($_SESSION['LINK']) );				
 	}
+	
+	public function SQL_SELECT_BY_LoginRgpd($LoginRgpd) {
+		$query = sprintf ( "SELECT i.LoginRgpd, i.PasswordRgpd, i.PasswordRgpdStatut FROM annuaire_individu i WHERE UPPER(LoginRgpd) = UPPER('%s') AND i.AnnuaireID=1 ", 
+				mysqli_real_escape_string ($_SESSION['LINK'] , $LoginRgpd ) );
+		
+		$result = mysqli_query ( $_SESSION['LINK'] ,$query ) or die ( mysqli_error ($_SESSION['LINK']) );
+		
+		if (mysqli_num_rows ( $result ) > 0) 
+		{
+			$line = mysqli_fetch_array ( $result );
+			$this->LoginRgpd = $line [0];
+			$this->PasswordRgpd = $line [1];
+			$this->PasswordRgpdStatut = $line [2];
+		} 
+		else 
+		{
+			$this->__construct ();
+		}
+		
+		mysqli_free_result ( $result );
+	}
+	
+	public function SQL_UPDATE_CUSTOMER_PRESTASHOP() {
+		$cookie_key_prestashop = 'H8ZcCJUUK6IbUrYs3cMoFdE2JViQqo40SovXZdwPHz7afAKZPDrkpqzn';
+		
+		$sql = "update ps_customer set 
+				email = '" . $this->LoginRgpd . "'
+				,passwd = '" . md5 ( $cookie_key_prestashop . $this->PasswordRgpd ) . "'
+				,date_upd = CURDATE()
+				,pwdclear = '" . $this->PasswordRgpd . "' 
+				where UPPER(email) = UPPER('%s')";
+		$query = sprintf ( $sql, mysqli_real_escape_string ( $_SESSION['LINK_PRESTASHOP'] , $this->LoginRgpd ) );
+		
+		mysqli_query ( $_SESSION['LINK_PRESTASHOP'] , $query ) or die ( mysqli_error ($_SESSION['LINK_PRESTASHOP']) );
+	}
+	
 	
 }
 ?>

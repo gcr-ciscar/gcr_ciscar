@@ -320,15 +320,17 @@ class SessionSecurite {
 		$sql = "SELECT i.IndividuID, i.Nom, i.Prenom, i.EnSommeil, i.PasswordRgpdStatut, i.Mail, i.LoginRgpd, i.PasswordRgpd, i.Login FROM annuaire_individu i, annuaire_lca_groupeindividu g WHERE i.IndividuID=g.IndividuID AND i.AnnuaireID='%s' AND g.GroupeID='%s' 
 				AND 
 				((UPPER(Login)=UPPER('%s') AND UPPER(Password)=UPPER('%s')) || 
-				(UPPER(LoginRgpd)=UPPER('%s') AND UPPER(PasswordRgpd)=UPPER('%s') ))";
+				(UPPER(LoginRgpd)=UPPER('%s') AND (UPPER(PasswordRgpd)=UPPER('%s') || UPPER(PasswordRgpd)=UPPER('%s') || UPPER(Password)=UPPER('%s'))))";
 		
 		$query = sprintf ( $sql, mysqli_real_escape_string ($_SESSION['LINK'] , $_SESSION ['SITE'] ['ID'] != '7' ? $_SESSION ['SITE'] ['ID'] : '2' ), 
 				mysqli_real_escape_string ($_SESSION['LINK'] , $_SESSION ['SITE'] ['LCA_GROUP_ID'] ), 
 				mysqli_real_escape_string ($_SESSION['LINK'] , $aUserName ), 
 				mysqli_real_escape_string ($_SESSION['LINK'] , $aPassword ), 
 				mysqli_real_escape_string ($_SESSION['LINK'] , $aUserName ),
-				mysqli_real_escape_string ($_SESSION['LINK'] , substr($aPassword, 0,2).hash('sha256',$aPassword).$aPassword[strlen($aPassword)-1]) );
-
+				mysqli_real_escape_string ($_SESSION['LINK'] , $aPassword ),
+				mysqli_real_escape_string ($_SESSION['LINK'] , substr($aPassword, 0,2).hash('sha256',$aPassword).$aPassword[strlen($aPassword)-1]),
+				mysqli_real_escape_string ($_SESSION['LINK'] , $aPassword));
+		
 		$result = mysqli_query ( $_SESSION['LINK'] ,$query ) or die ( mysqli_error ($_SESSION['LINK']) );
 		// L'utilisateur existe
 		if (mysqli_num_rows ( $result ) > 0) {

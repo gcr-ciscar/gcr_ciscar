@@ -62,23 +62,27 @@
                 }
             }
 
-            if (that.vars.alphaCount >= 1) {
+            if (that.vars.alphaCount >= 1 ) {
                 that.vars.strength += 5 * that.vars.alphaCount;
             }
             if (password.length >= 8)
             	{
-		            if (that.vars.alphaCapsCount >= 1 && that.vars.alphaCapsCount <= 5) {
+		            if (that.vars.alphaCapsCount >= 1 ) {
 		                that.vars.strength += 10 * that.vars.alphaCapsCount;
 		            }
 		            if (that.vars.numberCount >= 1) {
 		                that.vars.strength += 5 * that.vars.numberCount;
 		            }
-		            if (that.vars.symbolCount >= 1 && that.vars.symbolCount <= 5) {
+		            if (that.vars.symbolCount >= 1)  {
 		                that.vars.strength += 15 * that.vars.symbolCount;
 		            }
 		            if (that.vars.numberCount >= 1 && that.vars.alphaCount >= 1) {
 		            	that.vars.strength += 10
 		            }
+            	}
+            else
+            	{
+            		that.vars.strength = (5 * that.vars.length);
             	}
 
 

@@ -8,22 +8,35 @@
 class CommunControler {
 	public function __construct() {
 	}
-	public function run() {
+	public function run($langue = null) {
 		
 		$action = '';
 		if (isset ( $_GET ['action'] ))
 			$action = $_GET ['action'];
+
 		if (isset ( $_SESSION [$_SESSION ['SITE'] ['NAME']] ['USER'] ['ACTION'] ) && $_SESSION [$_SESSION ['SITE'] ['NAME']] ['USER'] ['ACTION'] == 'icomV5' && $action == '')
 			$action = 'icomV5';
 
-		//si demande de confirmation des identifiants RGPD	
-		if (isset ( $_GET ['action']) && stripos($_GET ['action'],'mdp2') !== false && stripos($_GET ['action'],'mdp2') == 0)
+		//si demande de confirmation des identifiants RGPD ciscar.net prestashop
+		if (isset ( $_GET ['action']) && stripos($_GET ['action'],'mdp2pts') !== false && stripos($_GET ['action'],'mdp2pts') == 0)
 		{
 			$tabconfirm = array();
-			$action = 'mdp2';
-			$strconfirm = substr($_GET ['action'],4);
+			$action = 'mdp2pts';
+			$strconfirm = substr($_GET ['action'],7);
 			$strconfirm = base64_decode($strconfirm);
 			$tabconfirm = explode("-&-",$strconfirm);
+		}
+		else
+		{
+			//si demande de confirmation des identifiants RGPD	
+			if (isset ( $_GET ['action']) && stripos($_GET ['action'],'mdp2') !== false && stripos($_GET ['action'],'mdp2') == 0)
+			{
+				$tabconfirm = array();
+				$action = 'mdp2';
+				$strconfirm = substr($_GET ['action'],4);
+				$strconfirm = base64_decode($strconfirm);
+				$tabconfirm = explode("-&-",$strconfirm);
+			}
 		}
 
 		switch ($action) {
@@ -34,7 +47,10 @@ class CommunControler {
 				return $this->ajaxmotdepasseLostAction ( $action );
 				break;
 			case 'mdp2' :
-				return $this->confirmidentifiantsRgpd ($tabconfirm);
+				return $this->confirmidentifiantsRgpd ($tabconfirm,$action);
+				break;
+			case 'mdp2pts' :
+				return $this->confirmidentifiantsRgpd ($tabconfirm,$action);
 				break;
 			case 'acces' :
 				return $this->acces2Action ( $action );
@@ -74,6 +90,9 @@ class CommunControler {
 				break;
 			case 'ajaxmotdepasseLost' :
 				return $this->ajaxmotdepasseLostAction ($action);
+				break;
+			case 'ajaxmotdepasseLostPrestashop' :
+				return $this->ajaxmotdepasseLostAction ($action, $langue);
 				break;
 			case 'ajaxmotdepasseRgpdMDP0' :
 				return $this->ajaxmotdepasseRgpdActionMDP0 ();
@@ -139,10 +158,20 @@ class CommunControler {
 			$aSessionSecurite->setSiteID ( $_SESSION ['SITE'] ['ID'] );
 			$aSessionSecurite->setSiteName ( $_SESSION ['SITE'] ['NAME'] );
 			
+			if ($action == 'validate' && isset ( $_GET ['login'] ))
+			{
+				$get = base64_decode($_GET ['login'] );
+				$tabget = explode('&', $get);
+				$username = base64_decode ( $tabget[0]);				
+				$password = base64_decode ( $tabget[1]);
+			}
+			else 
+			{
 			// si login et mot de passe dans querystring
-			if (isset ( $_GET ['login'] )) {
-				$username = $_GET ['login'];
-				$password = base64_decode ( $_GET ['pwd'] );
+				if (isset ( $_GET ['login'] )) {
+					$username = $_GET ['login'];
+					$password = base64_decode ( $_GET ['pwd'] );
+				}
 			}
 			if (isset ( $_POST ['username'] )) {
 				$username = $_POST ['username'];
@@ -153,19 +182,19 @@ class CommunControler {
 			
 			// Conformité RGPD
 			//si le changement de mail n'est pas encore actif
-			if ($result == 0 && $aSessionSecurite->getPwdUserStatut() <= 2 && $action != "mdp0" && $action != "loginIcom")
+			if ($result == 0 && $aSessionSecurite->getPwdUserStatut() <= 2 && $action != "mdp0" && !isset($_GET['sso']))
 			{
 
 				if ($aSessionSecurite->getPwdUserStatut() == -1)
 				{
 					//pour les nouveaux comptes on demande de renseigner les identifiants définitifs
-					$msg = 'MDPV&'.$aSessionSecurite->getMailUser().'&'.$username.'&'.$password.'&'.$aSessionSecurite->getUserFullname();;
+					$msg = 'MDPV&'.$aSessionSecurite->getMailUser().'&'.$username.'&'.$password.'&'.$aSessionSecurite->getUserFullname().'&'.$aSessionSecurite->getLoginRgpd();
 					$result = '-1';
 				}					
 				if ($aSessionSecurite->getPwdUserStatut() == 0)
 				{
 					//Le changement d'identifiants n'a pas été fait	
-					$msg = 'MDP0&'.$aSessionSecurite->getMailUser().'&'.$username.'&'.$password.'&'.$aSessionSecurite->getUserFullname();
+					$msg = 'MDP0&'.$aSessionSecurite->getMailUser().'&'.$username.'&'.$password.'&'.$aSessionSecurite->getUserFullname().'&'.$aSessionSecurite->getLoginRgpd();
 					$result = '-1';
 				}
 				if ($aSessionSecurite->getPwdUserStatut() == 2 && $aSessionSecurite->getLoginUser() == $username)
@@ -228,7 +257,8 @@ class CommunControler {
 							
 							// On redirige ver ciscar.be														
 							//header ( 'Location: http://ciscarbelge.local/fr/index.php?action=sso&token=' . $ssotoken->getToken () );
-							header ( 'Location: http://www.ciscar.be/fr/index.php?action=sso&token=' . $ssotoken->getToken () );
+							//header ( 'Location: http://www.ciscar.be/fr/index.php?action=sso&token=' . $ssotoken->getToken () );
+							header ( 'Location: //ciscarbelge.vm/fr/index.php?action=sso&token=' . $ssotoken->getToken () );
 						} else {
 							// IcomV5
 							if ($action == 'icomV5' || $action == 'geolane') {
@@ -253,9 +283,9 @@ class CommunControler {
 								else
 								{
 									if (strpos ($_SERVER["HTTP_REFERER"] , "https") === false)
-										$URL = 'https://e-commerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
+										$URL = 'https://ecommerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
 									else
-										$URL = 'https://e-commerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
+										$URL = 'https://ecommerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
 								}
 								
 									// $URL = 'http://int-cpfrv5-1.i-comsoftware.com/localisation/ciscar/ciscarin.aspx';
@@ -279,9 +309,9 @@ class CommunControler {
 									if (isset ( $_GET ['promo'] ) && $_GET ['promo'] == "on")
 									{
 										if (strpos ($_SERVER["HTTP_REFERER"] , "https") === false)
-											$URL = 'http://ecommerce.ciscar.fr/catalogue/catproductlist2.aspx?chkpromo=on';
+											$URL = 'https://ecommerce.ciscar.fr/catalogue/catproductlist2.aspx?chkpromo=on';
 										else
-											$URL = 'https://e-commerce.ciscar.fr//catalogue/catproductlist2.aspx?chkpromo=on';
+											$URL = 'https://ecommerce.ciscar.fr//catalogue/catproductlist2.aspx?chkpromo=on';
 										$params = str_replace('?', '&', $params);
 									}
 								}
@@ -730,9 +760,11 @@ class CommunControler {
 		if (isset ( $_POST ['button-Validate'] )) {
 			$aIndividu = new Individu ();
 			$aIndividu->setLoginRgpd( $_POST ['mdp0mail']);
+			$aIndividu->setEMail( $_POST ['mdp0mailcontact']);
 			$aIndividu->setPasswordRgpd( $_POST ['mdp0pwd1']);
 			$aIndividu->setLogin( $_POST ['username']);
 			$aIndividu->setPassword( $_POST ['password']);
+			$aIndividu->setNewsletter( $_POST ['news']);
 			//On verifie si l'adresse mail utilisée comme Login RGPD existe déjà
 			$aIndividu->SQL_SELECT_Valid_MailRgpd();
 		
@@ -741,6 +773,9 @@ class CommunControler {
 				// ok
 				//on met a jour les identifiants RGPD
 				$aIndividu->SQL_UPDATE_individu_Rgpd();
+
+				//on met a jour le mail de contact
+				$aIndividu->SQL_UPDATE_individu_Mail_Contact(1);
 				
 				//si login RGPD est passé au statut "validé"
 				if ($aIndividu->getPasswordRgpdStatut() == 2)
@@ -767,9 +802,11 @@ class CommunControler {
 		if (isset ( $_POST ['button-Validate'] )) {
 			$aIndividu = new Individu ();
 			$aIndividu->setLoginRgpd( $_POST ['mdp0mail']);
+			$aIndividu->setEMail( $_POST ['mdp0mailcontact']);
 			$aIndividu->setPasswordRgpd( $_POST ['mdp0pwd1']);
 			$aIndividu->setLogin( $_POST ['username']);
 			$aIndividu->setPassword( $_POST ['password']);
+			$aIndividu->setNewsletter( $_POST ['news']);
 			//On verifie si l'adresse mail utilisée comme Login RGPD existe déjà
 			$aIndividu->SQL_SELECT_Individu_LoginLost();
 
@@ -778,12 +815,38 @@ class CommunControler {
 				// ok
 				//on met a jour les identifiants RGPD
 				$aIndividu->SQL_UPDATE_individu_Lost(2);
+				//on met à jour le mot de passe pour prestashop
+				$aIndividu->SQL_UPDATE_individu_Lost_Prestashop();
+				//mise a jour mot de passe dans la base de données Prestashop
+				
+				// PRESTASHOP LOCAL
+				//$CONFIG_MYSQL_HOSTNAME_PRESTASHOP = 'localhost';
+				//$CONFIG_MYSQL_BASENAME_PRESTASHOP = 'prestashop';
+				//$CONFIG_MYSQL_USERNAME_PRESTASHOP = 'root';
+				//$CONFIG_MYSQL_PASSWORD_PRESTASHOP = '';
+				
+				// PRESTASHOP PROD
+				$CONFIG_MYSQL_HOSTNAME_PRESTASHOP = '127.0.0.1' ;
+				$CONFIG_MYSQL_BASENAME_PRESTASHOP = 'prestashop' ;
+				$CONFIG_MYSQL_USERNAME_PRESTASHOP = 'abakus';
+				$CONFIG_MYSQL_PASSWORD_PRESTASHOP = 'HjMPcLr9';
+				
+				$link_prestashop = mysqli_connect ( $CONFIG_MYSQL_HOSTNAME_PRESTASHOP, $CONFIG_MYSQL_USERNAME_PRESTASHOP, $CONFIG_MYSQL_PASSWORD_PRESTASHOP,$CONFIG_MYSQL_BASENAME_PRESTASHOP );
+				mysqli_set_charset($link_prestashop, "ISO-8859-1");
+				$_SESSION['LINK_PRESTASHOP'] = $link_prestashop;
+				
+				$aIndividu->SQL_UPDATE_CUSTOMER_PRESTASHOP();
+				
+				mysqli_close ( $_SESSION['LINK_PRESTASHOP'] );
+				
+				//on met a jour le mail de contact
+				$aIndividu->SQL_UPDATE_individu_Mail_Contact(1);
 				
 				//si login RGPD est passé au statut "validé"
 				if ($aIndividu->getPasswordRgpdStatut() == 2)
 					$msg = 'ok';
-					else
-						$msg = 'false';
+				else
+					$msg = 'false';
 			}
 			else
 			{
@@ -798,7 +861,7 @@ class CommunControler {
 		echo $msg;
 	}
 	
-	private function ajaxmotdepasseLostAction($action) {
+	private function ajaxmotdepasseLostAction($action,$langue = NULL) {
 		$msg = '';
 
 		if (isset ( $_POST ['button-Validate'] ) || isset ( $_POST ['button-Envoyer'] )) 
@@ -830,7 +893,7 @@ class CommunControler {
 			{
 				if($msg == ''  )
 				{
-					if( $action == 'ajaxmotdepasseLost' || $action == 'ajaxmotdepasseLostciscom')
+					if( $action == 'ajaxmotdepasseLost' || $action == 'ajaxmotdepasseLostciscom' || $action == 'ajaxmotdepasseLostPrestashop')
 					{
 						//on met a jour les identifiants RGPD
 						$aIndividu->SQL_UPDATE_individu_Lost(1);
@@ -838,7 +901,12 @@ class CommunControler {
 						if( $action == 'ajaxmotdepasseLost')
 							$msg = $this->mailConfirm($aIndividu->getLoginRgpd());
 						else
-							$msg = $this->mailConfirmciscom($aIndividu->getLoginRgpd());
+						{
+							if( $action == 'ajaxmotdepasseLostPrestashop')
+								$msg = $this->mailConfirmPrestashop($aIndividu->getLoginRgpd(),$langue);
+							else
+								$msg = $this->mailConfirmciscom($aIndividu->getLoginRgpd());
+						}
 					}
 					else 
 					{
@@ -861,7 +929,7 @@ class CommunControler {
 		echo $msg;
 	}
 
-	private function confirmidentifiantsRgpd($tabconfirm) {
+	private function confirmidentifiantsRgpd($tabconfirm,$action) {
 		$msg = '';
 
 		if (count($tabconfirm) > 1)
@@ -873,8 +941,8 @@ class CommunControler {
 			{
 				$msg = 'ok';
 			}
-			else 
-				$msg = 'ko';
+		else 
+			$msg = 'ko';
 		}
 		else 
 			$msg = 'ko';
@@ -903,16 +971,51 @@ class CommunControler {
 				if($msg == ''  )
 				{
 					//on met a jour les identifiants RGPD
-					$aIndividu->SQL_UPDATE_individu_Confirm();
+					$aIndividu->SQL_SELECT_BY_LoginRgpd($confirmail);
+					
+					//si la mise à jour n'a pas encore été faite
+					if ($aIndividu->getPasswordRgpdStatut() == 1)
+					{
+						$aIndividu->SQL_UPDATE_individu_Lost(2);
+						//on met à jour le mot de passe pour prestashop
+						$aIndividu->SQL_UPDATE_individu_Lost_Prestashop();
+						//mise a jour mot de passe dans la base de données Prestashop
+
+							// PRESTASHOP LOCAL
+							//$CONFIG_MYSQL_HOSTNAME_PRESTASHOP = 'localhost';
+							//$CONFIG_MYSQL_BASENAME_PRESTASHOP = 'prestashop';
+							//$CONFIG_MYSQL_USERNAME_PRESTASHOP = 'root';
+							//$CONFIG_MYSQL_PASSWORD_PRESTASHOP = '';
+							
+							// PRESTASHOP PROD
+							$CONFIG_MYSQL_HOSTNAME_PRESTASHOP = '127.0.0.1' ;
+							$CONFIG_MYSQL_BASENAME_PRESTASHOP = 'prestashop' ;
+							$CONFIG_MYSQL_USERNAME_PRESTASHOP = 'abakus';
+							$CONFIG_MYSQL_PASSWORD_PRESTASHOP = 'HjMPcLr9';
+													
+							$link_prestashop = mysqli_connect ( $CONFIG_MYSQL_HOSTNAME_PRESTASHOP, $CONFIG_MYSQL_USERNAME_PRESTASHOP, $CONFIG_MYSQL_PASSWORD_PRESTASHOP,$CONFIG_MYSQL_BASENAME_PRESTASHOP );
+							mysqli_set_charset($link_prestashop, "ISO-8859-1");
+							$_SESSION['LINK_PRESTASHOP'] = $link_prestashop;
+							
+							$aIndividu->SQL_UPDATE_CUSTOMER_PRESTASHOP();
+							
+							mysqli_close ( $_SESSION['LINK_PRESTASHOP'] );
+					}
 					$msg = 'ok';
 				}
 			}
 		}
 		$aConnectionView = new HomePageNonConnecteView ();
-		if(isset($tabconfirm[2]) && $tabconfirm[2] == 'ciscom' && $msg = 'ok')
-			$msg = 'okciscom';
-		return $aConnectionView->renderHTML ( 'MDP2&'.$msg );
+		if ($action == "mdp2pts")
+			echo $this->redirection ( 'prestashop.php?action=mdp2&msg='.$msg);
+		else 
+		{
+			if(isset($tabconfirm[2]) && $tabconfirm[2] == 'ciscom' && $msg = 'ok')
+				$msg = 'okciscom';		
+			return $aConnectionView->renderHTML ( 'MDP2&'.$msg );
+		}
 	}
+	
 	private function mailConfirm($loginRgpd) {
 		$msg = '';
 		
@@ -927,7 +1030,7 @@ class CommunControler {
 				$aParam->search_param ( $_SESSION ['SITE'] ['NAME'] . '_MAIL_LOGIN_FROM' );
 				$mailAdmin->setFrom ( $aParam->getValue () );
 				$mailAdmin->setTo ( $aIndividu->getLoginRgpd() );
-				$mailAdmin->setHeaderBcc ( $aParam->getValue () );
+				//$mailAdmin->setHeaderBcc ( $aParam->getValue () );
 				$mailAdmin->setSubject ( '[CISCAR] Merci de confirmer la modification de votre mot de passe' );
 				
 				$msgMail = "Cher client,<br>";
@@ -935,7 +1038,7 @@ class CommunControler {
 				$msgMail .= 'Vous avez modifié votre mot de passe sur <a href="www.ciscar.fr">www.ciscar.fr</a>.<br/><br/>';
 				$msgMail .= 'Vous devez encore <a href="'.$url.'">valider votre nouveau mot de passe</a> pour profiter de tous les services de votre compte CISCAR.<br/><br/>';
 				$msgMail .= 'Pour vous connecter, utilisez votre adresse mail et le mot de passe que vous avez renseigné.<br/><br/>';
-				$msgMail .= "<i>Si vous n'êtes pas à l'origine de cette demande, veuillez nous en <a href='mailto:p.germain@gcrfrance.com'>informer</a> rapidement et modifier vos codes d'accès sur ciscar.fr</i><br><br>";
+				$msgMail .= "<i>Si vous n'êtes pas à l'origine de cette demande, veuillez nous en <a href='mailto:p.germain@gcrfrance.com'>informer</a> rapidement et modifier votre mot de passe sur ciscar.fr</i><br><br>";
 				$msgMail .= "Merci de votre confiance.<br><br>";
 				$msgMail .= "<a href='www.ciscar.fr'><input type='image' src='HTTP://" . $_SERVER ['SERVER_NAME']."/include/images/logo_ciscar.png' alt='ciscar'></a>";
 				
@@ -953,6 +1056,45 @@ class CommunControler {
 		return $msg;
 	}
 
+	private function mailConfirmPrestashop($loginRgpd,$langue) {
+		$msg = '';
+		
+		$aIndividu = new Individu ();
+		$aIndividu->setLoginRgpd($loginRgpd);
+		//on prepare l'url utilisée pour confirmer le changement d'identifiants
+		$url = 'http://' . $_SERVER ['SERVER_NAME'].'?action=mdp2pts'.base64_encode(strrev($aIndividu->getLoginRgpd()).'-&-'.hash('sha256','£mdp2$'.$aIndividu->getLoginRgpd().'$mdp2£'));
+		// Email Admin
+		$mailAdmin = new NotificationMail ();
+		
+		$aParam = new Param ();
+		$aParam->search_param ( $_SESSION ['SITE'] ['NAME'] . '_MAIL_LOGIN_FROM' );
+		$mailAdmin->setFrom ( $aParam->getValue () );
+		$mailAdmin->setTo ( $aIndividu->getLoginRgpd() );
+		//$mailAdmin->setHeaderBcc ( $aParam->getValue () );
+		$mailAdmin->setSubject ( '[CISCAR] Merci de confirmer la modification de votre mot de passe' );
+		
+		$msgMail = "Cher client,<br>";
+		$msgMail .= "<br>";
+		$msgMail .= 'Vous avez modifié votre mot de passe sur <a href="www.ciscar.net">www.ciscar.net</a>.<br/><br/>';
+		$msgMail .= 'Vous devez encore <a href="'.$url.'">valider votre nouveau mot de passe</a> pour profiter de tous les services de votre compte CISCAR.<br/><br/>';
+		$msgMail .= 'Pour vous connecter, utilisez votre adresse mail et le mot de passe que vous avez renseigné.<br/><br/>';
+		$msgMail .= "<i>Si vous n'êtes pas à l'origine de cette demande, veuillez nous en <a href='mailto:p.germain@gcrfrance.com'>informer</a> rapidement et modifier votre mot de passe sur ciscar.net</i><br><br>";
+		$msgMail .= "Merci de votre confiance.<br><br>";
+		$msgMail .= "<a href='www.ciscar.net'><input type='image' src='HTTP://" . $_SERVER ['SERVER_NAME']."/include/images/logo_ciscar.png' alt='ciscar'></a>";
+		
+		$mailAdmin->setMessage ( '<html><body style="color:#000000;font-size: x-small;font-family:Arial;">' . $msgMail . '</body></html>' );
+		$mailAdmin->setHeaderReplyTo ( $aParam->getValue () );
+		$mailAdmin->setHeaderContentType ( 'text/html; charset="iso-8859-1"' );
+		$mailAdmin->setHeaderContentTransferEncoding ( '8bit' );
+		
+		//print $msgMail;
+		//die();
+		if (! $mailAdmin->send ())
+			$msg = "false";
+		else
+			$msg = 'ok';
+		return $msg;
+	}
 	private function mailConfirmciscom($loginRgpd) {
 		$passage_ligne = "\r\n";
 		
@@ -977,7 +1119,7 @@ class CommunControler {
 		$msgMail .= 'Vous avez modifié votre mot de passe sur <a href="www.ciscar.fr">www.ciscar.fr</a>.<br/><br/>';
 		$msgMail .= 'Vous devez encore <a href="'.$url.'">valider votre nouveau mot de passe</a> pour profiter de tous les services de votre compte.<br/><br/>';
 		$msgMail .= 'Pour vous connecter sur <a href="ciscar.fr">ciscar.fr</a> ou <a href="marketing.cis-com.eu">marketing.cis-com.eu</a>, utilisez votre adresse mail et le mot de passe que vous avez renseigné.<br/><br/>';
-		$msgMail .= "<i>Si vous n'êtes pas à l'origine de cette demande, veuillez nous en <a href='mailto:p.germain@gcrfrance.com'>informer</a> rapidement et modifier vos codes d'accès sur ciscar.fr</i><br><br>";
+		$msgMail .= "<i>Si vous n'êtes pas à l'origine de cette demande, veuillez nous en <a href='mailto:p.germain@gcrfrance.com'>informer</a> rapidement et modifier votre mot de passe sur ciscar.fr</i><br><br>";
 		$msgMail .= "Merci de votre confiance.<br><br>".$passage_ligne;
 		$msgMail .= "<table><tr><td>";
 		$msgMail .= "<a href='www.marketing.cis-com.eu'><input type='image' src='http://" . $_SERVER ['SERVER_NAME']."/include/images/logo_Ciscom_2018.png' alt='ciscom'></a></td></tr></table>";
@@ -1148,31 +1290,31 @@ class CommunControler {
 				$aParam = new Param ();
 				$aParam->search_param ( $_SESSION ['SITE'] ['NAME'] . '_MAIL_LOGIN_FROM' );
 				
-				$aMail = new NotificationMail ();
-				$aMail->setFrom ( $aParam->getValue() );
-				$aMail->setHeaderReplyTo ( $aParam->getValue() );
+				$aMailadmin = new NotificationMail ();
+				$aMailadmin->setFrom ( $aParam->getValue() );
+				$aMailadmin->setHeaderReplyTo ( $aParam->getValue() );
 				// si la marque n'est pas présente dans le formulaire, cela indique que la demande d'inscription est une demande IMPRIMES RNET
 				if (!isset($_POST ['pMarque']))
-					$aMail->setSubject ( 'Demande de connexion au portail CISCAR.FR/IMPRNET' );
+					$aMailadmin->setSubject ( 'Demande de connexion au portail CISCAR.FR/IMPRNET' );
 				else
-					$aMail->setSubject ( 'Demande de connexion au portail CISCAR.FR' );
-				$aMail->setMessage ( '<html><body style="color:#000000;font-size: x-small;font-family:Arial;">' . $msgMail . '</body></html>' );
-				$aMail->setHeaderContentType ( 'text/html; charset="iso-8859-1"' );
-				$aMail->setHeaderContentTransferEncoding ( '8bit' );
-				$aMail->setTo ( $aParam->getValue() );
-				//$aMail->setTo ( 'p.germain@ciscar.fr' );
+					$aMailadmin->setSubject ( 'Demande de connexion au portail CISCAR.FR' );
+				$aMailadmin->setMessage ( '<html><body style="color:#000000;font-size: x-small;font-family:Arial;">' . $msgMail . '</body></html>' );
+				$aMailadmin->setHeaderContentType ( 'text/html; charset="iso-8859-1"' );
+				$aMailadmin->setHeaderContentTransferEncoding ( '8bit' );
+				//$aMail->setTo ( $aParam->getValue() );
+				$aMailadmin->setTo ( 'p.germain@ciscar.fr' );
 				// Si KBIS renseigner le mettre en pièce jointe du mail
 				if (isset ($_FILES['kbis'] ['tmp_name']) && $_FILES['kbis'] ['tmp_name'] != '')
 				{
-					$aMail->addAttachment($_FILES['kbis'] ['type'], $_FILES['kbis'] ['name'], $_FILES['kbis'] ['tmp_name']);
+					$aMailadmin->addAttachment($_FILES['kbis'] ['type'], $_FILES['kbis'] ['name'], $_FILES['kbis'] ['tmp_name']);
 				}
 				// Si RIB renseigner le mettre en pièce jointe du mail
 				if (isset ($_FILES['rib'] ['tmp_name']) && $_FILES['rib'] ['tmp_name'] != '')
 				{
-					$aMail->addAttachment($_FILES['rib'] ['type'], $_FILES['rib'] ['name'], $_FILES['rib'] ['tmp_name']);
+					$aMailadmin->addAttachment($_FILES['rib'] ['type'], $_FILES['rib'] ['name'], $_FILES['rib'] ['tmp_name']);
 				}
-	
-				$aMail->send ();
+
+				$aMailadmin->send ();
 				
 				// Creation du mail pour le demandeur
 				
@@ -1182,15 +1324,15 @@ class CommunControler {
 				$msgMail .= '<br/>';
 				$msgMail .= 'Cordialement,<br/>Les Equipes de CISCAR<br>';
 				$msgMail .= "<a href='www.ciscar.fr'><input type='image' src='http://" . $_SERVER ['SERVER_NAME']."/include/images/logo_ciscar.png' alt='ciscar'></a>";
-				$aMail = new NotificationMail ();
-				$aMail->setFrom ( $aParam->getValue() );
-				$aMail->setHeaderReplyTo ( $aParam->getValue() );
-				$aMail->setSubject ( 'Demande de connexion au portail CISCAR.FR' );
-				$aMail->setMessage ( '<html><body style="color:#000000;font-size: x-small;font-family:Arial;">' . $msgMail . '</body></html>' );
-				$aMail->setHeaderContentType ( 'text/html; charset="iso-8859-1"' );
-				$aMail->setHeaderContentTransferEncoding ( '8bit' );
-				$aMail->setTo ( trim ( $_POST ['pMail'] ) );
-				$aMail->send ();
+				$aMailclient = new NotificationMail ();
+				$aMailclient->setFrom ( $aParam->getValue() );
+				$aMailclient->setHeaderReplyTo ( $aParam->getValue() );
+				$aMailclient->setSubject ( 'Demande de connexion au portail CISCAR.FR' );
+				$aMailclient->setMessage ( '<html><body style="color:#000000;font-size: x-small;font-family:Arial;">' . $msgMail . '</body></html>' );
+				$aMailclient->setHeaderContentType ( 'text/html; charset="iso-8859-1"' );
+				$aMailclient->setHeaderContentTransferEncoding ( '8bit' );
+				$aMailclient->setTo ( trim ( $_POST ['pMail'] ) );
+				$aMailclient->send ();
 				
 				echo $this->redirection ( '?action=merci' );
 			}

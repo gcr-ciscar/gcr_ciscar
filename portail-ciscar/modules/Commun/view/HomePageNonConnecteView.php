@@ -10,8 +10,9 @@ class HomePageNonConnecteView {
 	}
 	public function renderHTML($msg = Null, $urlReturn = Null) {
 		$mdpmail = '';
+		$mdpmailRgpd = '';
 		$mdpuser = '';
-		$mdppwd = '';
+		$mdppwd = '  ';
 		$mdpfullname = '';
 		
 		if (strpos($msg,"MDP0") !== false || strpos($msg,"MDP1") !== false || strpos($msg,"MDP2") !== false || strpos($msg,"MDPV") !== false || strpos($msg,"MDPA") !== false)
@@ -25,7 +26,11 @@ class HomePageNonConnecteView {
 					$mdpmail = $tabmsg[1];
 					$mdpuser = $tabmsg[2];
 					$mdppwd = $tabmsg[3];
+					if ($mdppwd == '')
+						$mdppwd = '  ';
 					$mdpfullname = $tabmsg[4];
+					if ($msg == 'MDPV' || $msg == 'MDP0')
+						$mdpmailRgpd = $tabmsg[5];
 				}
 				else 
 				{
@@ -33,7 +38,7 @@ class HomePageNonConnecteView {
 				}
 			}
 		}
-		
+
 		$aParam = new Param ();
 		$aParam->search_param ( 'CISCAR_PUB_HOMEPAGE_IMAGE' );
 		$aParam2 = new Param ();
@@ -73,6 +78,10 @@ class HomePageNonConnecteView {
 		// Confirm
 		$aff .= '<link rel="stylesheet" href="include/css/jquery-confirm.css">';
 		$aff .= '<script src="include/js/jquery-confirm.js"></script>';
+
+		// Bouton Swich
+		$aff .= '<link rel="stylesheet" href="include/css/jquery.btnswitch.css">';
+		$aff .= '<script src="include/js/jquery.btnswitch.js"></script>';
 		
 		//Slick SlideShow
 		$aff .= '<link rel="stylesheet" type="text/css" href="include/slick/slick.css"/>';
@@ -109,7 +118,7 @@ class HomePageNonConnecteView {
 			margin-top:10px;
 			width: 100%;}';
 
-		$aff .= '#inputmdp0mail,#inputmdp1mail, #inputmdp0pwd1,#inputmdp0pwd2,#inputmdplostmail, #inputmdplostpwd1,#inputmdplostpwd2 {
+		$aff .= '#inputmdp0mail,#inputmdp0mailcontact,#inputmdp1mail, #inputmdp0pwd1,#inputmdp0pwd2,#inputmdplostmail, #inputmdplostpwd1,#inputmdplostpwd2 {
 			background-color: transparent;
 			border: 1px solid #878484;
 			border-radius: 5px;
@@ -383,7 +392,12 @@ class HomePageNonConnecteView {
 			// login lost => observe link with id "login_lost_link"
 			$("#login_lost_link").fancybox({
 				overlayOpacity:0.8,
-				overlayColor:\'#000000\'
+				modal:true,
+				showCloseButton:true,
+				overlayColor:\'#000000\',
+		    afterShow : function() {
+		        $(\'.fancybox-skin\').append(\'<a title="Close" class="fancybox-item fancybox-close" href="javascript:jQuery.fancybox.close()"></a>\');
+		    }
 			});
 		});	
 		</script>
@@ -392,17 +406,32 @@ class HomePageNonConnecteView {
 			// MDP0 => observe link with id ""
 			$("#mdp0_link").fancybox({
 				overlayOpacity:0.8,
-				overlayColor:\'#000000\'
+				modal:true,
+				showCloseButton:true,
+				overlayColor:\'#000000\',
+		    afterShow : function() {
+		        $(\'.fancybox-skin\').append(\'<a title="Close" class="fancybox-item fancybox-close" href="javascript:jQuery.fancybox.close()"></a>\');
+		    }
 			});
 			// MDP1 => observe link with id ""
 			$("#mdp1_link").fancybox({
 				overlayOpacity:0.8,
-				overlayColor:\'#000000\'
+				modal:true,
+				showCloseButton:true,
+				overlayColor:\'#000000\',
+		    afterShow : function() {
+		        $(\'.fancybox-skin\').append(\'<a title="Close" class="fancybox-item fancybox-close" href="javascript:jQuery.fancybox.close()"></a>\');
+		    }
 			});
 			// MDPV => observe link with id ""
 			$("#mdpv_link").fancybox({
 				overlayOpacity:0.8,
-				overlayColor:\'#000000\'
+				modal:true,
+				showCloseButton:true,
+				overlayColor:\'#000000\',
+		    afterShow : function() {
+		        $(\'.fancybox-skin\').append(\'<a title="Close" class="fancybox-item fancybox-close" href="javascript:jQuery.fancybox.close()"></a>\');
+		    }
 			});
 		});
 		</script>';
@@ -637,8 +666,8 @@ class HomePageNonConnecteView {
 
 		//<!-- LOGIN LOST -->
 		$aff .= '<div id="login_lost" style="text-align:left;font-family:arial;font-size:12px;display:none;">';
-		$aff .= '             <h1 style="color:#ee8b1e;">Mot de passe perdu...</h1>';
-		$aff .= '              <p>Vous avez perdu votre mot de passe...</br>Veuillez renseigner  votre adresse mail de connexion et votre nouveau mot de passe.</p>';
+		$aff .= '             <h1 style="color:#ee8b1e;">Nouveau mot de passe...</h1>';
+		$aff .= '              <p>Vous avez perdu ou vous souhaitez modifier votre mot de passe...</br>Veuillez renseigner  votre adresse mail de connexion et votre nouveau mot de passe.</p>';
 		$aff .= '              <div>';
 		$aff .= '				<form id="formmotdepasseperdu"  action="?action=ajaxmotdepasseLost" method="POST" name="motdepasseperdu" >';
 		$aff .= '				<table width="100%">
@@ -694,24 +723,54 @@ class HomePageNonConnecteView {
 				<a href="#mdp0" id="mdp0_link" style="font-family:Fjalla One,helvetica,arial;font-size:12px;color:white;"></a>';
 		$aff .= '<div id="mdp0" style="text-align:left;font-family:arial;font-size:12px;display:none;">';
 		$aff .= '             <h1 style="color:#ee8b1e;">Changement d\'identifiants...</h1>';
-		$aff .= '              <p><font style="color:#b91509;font-weight:bold;">'.$mdpfullname.'</br>A compter du xx/xx/xxxx vos identifiants ne seront plus actifs.</font><br/>Le Règlement général sur la protection des données (RGPD) nous impose de modifier</br> notre système de déclaration et d\'enregistrement des mots de passe.</br>
-								<font style="color:#078cb7;font-weight:bold;">Ceux-ci doivent dorénavant être définis par les utilisateurs.</font></br></br>
-								Par la même occasion, nous allons modifier votre identifiant de connexion qui sera remplacé</br>par votre adresse mail.</br>
-								Merci de renseigner votre adresse mail et votre nouveau mot de passe:</p>';
+		$aff .= '              <p><font style="font-weight:bold;">'.$mdpfullname.'<br></br>A compter du 30/09/2019 vos identifiants actuels ne seront plus actifs.</font><br/>Nous avons fait évoluer notre système d\'authentification.</br>
+								<font style="color:#078cb7;font-weight:bold;">Dorénavant les identifiants de connexion seront définis par les utilisateurs.</font></br></br>
+								Pour vous identifier il vous faut saisir une adresse mail de connexion valide</br>et un mot de passe à votre convenance.</br>
+								<br>Merci de renseigner les informations ci-dessous et d\'enregistrer vos nouveaux identifiants:</p>';
 		$aff .= '              <div>
-								<form id="formmdp0"  action="?action=mdp0" method="POST" name="formmdp0" >
+								<form id="formmdp0"  action="?action=ajaxmotdepasseRgpdMDP0" method="POST" name="formmdp0" >
 								<table width="100%">
+								<tr style="border-top:1px solid #a2a2a2;">
+								<td>
+								<strong>Adresse mail de contact *</strong><br>
+								</td>
+								<td >
+								<input id="inputmdp0mailcontact" style="margin-bottom:5px;" type="email" value="'.$mdpmail.'" required class="input_login_lost" name="mdp0mailcontact" >
+								</td>
+								</tr>
+								<tr>
+								<td colspan="2">
+								<font style="color:#8c8c8c;font-style:italic;">* à renseigner pour toutes correspondances concernant le suivi de vos commandes. </font>
+								</td>
+								</tr>
+								<tr>
+								<td>
+								<font style="color:#8c8c8c;font-style:italic;">Souhaitez-vous recevoir nos offres commerciales <br>et vous tenir informer de l\'actualité CISCAR ? </font><br>
+								</td>
+								<td>
+								<br>
+								<div id="btnswitch"></div>
+								<br>
+								<input type="hidden" name="news" id="news" value="1">
+								</td>
+								</tr>
+								<tr style="border-top:1px solid #a2a2a2;">
 								<tr>
 								<td >
-								Adresse mail de connexion
+								<strong>Adresse mail de connexion</strong>
 								</td>
 								<td >
 								<input id="inputmdp0mail" style="margin-bottom:5px;" type="email" required value="'.$mdpmail.'" class="input_login_lost" name="mdp0mail" >
 								</td>
 								</tr>
 								<tr>
+								<td colspan="2">
+								<font style="color:#b91509;">Veuillez renseigner un mot de passe sur 8 caractères minimum.</font>
+								</td>
+								</tr>
+								<tr>
 								<td >
-								Mot de passe
+								<strong>Mot de passe</strong>
 								</td>
 								<td>
 								<div id="divPassword">
@@ -724,7 +783,7 @@ class HomePageNonConnecteView {
 								</tr>
 								<tr>
 								<td >
-								Confirmez votre mot de passe
+								<strong>Confirmez votre mot de passe</strong>
 								</td>
 								<td>
 								<input id="inputmdp0pwd2" type="password" value="" class="input_login_lost" name="mdp0pwd2" >
@@ -753,23 +812,52 @@ class HomePageNonConnecteView {
 		$aff .= '<!-- LINK THAT OPEN FANCYBOX -->
 				<a href="#mdpv" id="mdpv_link" style="font-family:Fjalla One,helvetica,arial;font-size:12px;color:white;"></a>';
 		$aff .= '<div id="mdpv" style="text-align:left;font-family:arial;font-size:12px;display:none;">';
-		$aff .= '             <h1 style="color:#ee8b1e;">Renseignez votre mot de passe définitif...</h1>';
-		$aff .= '              <p><font style="color:#b91509;font-weight:bold;">'.$mdpfullname.',</br>veuillez renseigner un mot de passe sur 8 caractères minimum.</font>
+		$aff .= '             <h1 style="color:#ee8b1e;">Validez votre inscription...</h1>';
+		$aff .= '              <p><font style="font-weight:bold;">'.$mdpfullname.',</font><br></br><font style="color:#078cb7;font-weight:bold;">Merci de valider votre inscription définitive en renseignant les informations ci-dessous.</font>
 							   </p>';
 		$aff .= '              <div>
 								<form id="formmdpv"  action="?action=ajaxmotdepasseRgpdMDPV" method="POST" name="formmdpv" >
 								<table width="100%">
-								<tr>
-								<td >
-								Adresse mail de connexion
+								<tr style="border-top:1px solid #a2a2a2;">
+								<td>
+								<strong>Adresse mail de contact *</strong><br>
 								</td>
 								<td >
-								<input id="inputmdp0mail" disabled style="margin-bottom:5px;" type="email" required value="'.$mdpmail.'" class="input_login_lost"  >
+								<input id="inputmdp0mailcontact" style="margin-bottom:5px;" type="email" value="'.$mdpmail.'" required class="input_login_lost" name="mdp0mailcontact" >
+								</td>
+								</tr>
+								<tr>
+								<td colspan="2">
+								<font style="color:#8c8c8c;font-style:italic;">* à renseigner pour toute correspondance concernant le suivi de vos commandes. </font>
+								</td>
+								</tr>
+								<tr>
+								<td>
+								<font style="color:#8c8c8c;font-style:italic;">Souhaitez-vous recevoir nos offres commerciales <br>et vous tenir informer de l\'actualité CISCAR ? </font><br>
+								</td>
+								<td>
+								<br>
+								<div id="btnswitch"></div>
+								<br>
+								<input type="hidden" name="news" id="news" value="1">
+								</td>
+								</tr>
+								<tr style="border-top:1px solid #a2a2a2;">
+								<td >
+								<strong>Adresse mail de connexion</strong>
+								</td>
+								<td >
+								<input id="inputmdp0mail" disabled style="margin-bottom:5px;" type="email" required value="'.$mdpmailRgpd.'" class="input_login_lost"  >
+								</td>
+								</tr>
+								<tr>
+								<td colspan="2">
+								<font style="color:#b91509;">Veuillez renseigner un mot de passe sur 8 caractères minimum.</font>
 								</td>
 								</tr>
 								<tr>
 								<td >
-								Votre mot de passe
+								<strong>Votre mot de passe</strong>
 								</td>
 								<td>
 								<div id="divPassword">
@@ -782,7 +870,7 @@ class HomePageNonConnecteView {
 								</tr>
 								<tr>
 								<td >
-								Confirmez votre mot de passe
+								<strong>Confirmez votre mot de passe</strong>
 								</td>
 								<td>
 								<input id="inputmdp0pwd2" type="password" value="" class="input_login_lost" name="mdp0pwd2" >
@@ -874,7 +962,7 @@ class HomePageNonConnecteView {
 		<p style="text-align:justify;">Dans l\'attente de vos codes d\'accès, nous pouvez d\'ores et déjà vous connecter à notre site E-commerce en mode <strong><font color="#4bff2d">VISITEUR</strong>, sans consultation des tarifs</font>.</p>
 		<div>
 		<a href="http://ciscar.channel-portal.com/?utm_source=Portail-CISCAR&utm_medium=Bouton_Continuer&utm_campaign=Accès+site+e-commerce+mode+visiteur" target="_blank">
-		<button style="background-color:#419641" id="button-mdpValidate" name="button-Validate" class="btn-success" >Visitez le site e-commerce</button>
+		<button style="background-color:#419641" id="button-ecommerce" name="button-ecommerce" class="btn-success" >Visitez le site e-commerce</button>
 		</a>
 		</div>
 		</div>';		
@@ -1368,26 +1456,33 @@ class HomePageNonConnecteView {
 		// Validation mot de passe RGPD
 		//$aff .= '$(function() {
 		$aff .= '$( "#button-mdpValidate" ).on( "click", function() {
+
 			$("#inputmdp0pwd2").css("border-color", "#878484");
 			$("#inputmdp0pwd1").css("border-color", "#878484");
 				
 			var mdp0mail = $("#inputmdp0mail").val();
+			var mdp0mailcontact = $("#inputmdp0mailcontact").val();
 			var mdp0pwd1 = $("#inputmdp0pwd1").val();
 			var mdp0pwd2 = $("#inputmdp0pwd2").val();
 			var username = $("#username").val();
 			var password = $("#password").val();
+			var news = $("#news").val();
 			var ajaxurl = "";
-			if ($("#origine") == "MDP0")
+			if ($("#origine").val() == "MDP0")
 			{
 				ajaxurl = "/index.php?action=ajaxmotdepasseRgpdMDP0";
 			}
-			if ($("#origine") == "MDPV")
+			if ($("#origine").val() == "MDPV")
 			{
 				ajaxurl = "/index.php?action=ajaxmotdepasseRgpdMDPV";
 			}
 			frmok ="ok";
 			if(mdp0mail == ""){
 				$("#inputmdp0mail").css("border-color", "red");
+				frmok ="ko";
+			}			
+			if(mdp0mailcontact == ""){
+				$("#inputmdp0mailcontact").css("border-color", "red");
 				frmok ="ko";
 			}			
 			if(mdp0pwd1 == ""){
@@ -1447,11 +1542,10 @@ class HomePageNonConnecteView {
 		    });
 			return false;
 			}
-
 			$.ajax({
 				url: ajaxurl,
 				type: "POST",
-				data:"mdp0mail="+mdp0mail+"&mdp0pwd1="+mdp0pwd1+"&username="+username+"&password="+password+"&button-Validate=ok",
+				data:"mdp0mail="+mdp0mail+"&mdp0mailcontact="+mdp0mailcontact+"&mdp0pwd1="+mdp0pwd1+"&username="+username+"&password="+password+"&news="+news+"&button-Validate=ok",
 				dataType : "html",
 				success: function(code_html, statut){
 					if(code_html=="ok")
@@ -1515,8 +1609,19 @@ class HomePageNonConnecteView {
 			});
 			return false;
 
-			});';
-		
+			});
+
+		$("#btnswitch").btnSwitch({
+    OnValue: "On",
+    OnCallback: function(val) {
+		$("#news").val("1") ;
+    },
+    OffValue: "Off",
+    OffCallback: function (val) {
+		$("#news").val("0");
+    }
+});
+		';
 		$aff .= '</script>';
 
 		

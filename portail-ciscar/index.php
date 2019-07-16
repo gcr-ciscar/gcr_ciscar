@@ -42,10 +42,13 @@ if (isset ( $_GET ['action']) && ($_GET ['action'] == "mdp0" || $_GET ['action']
 		stripos($_GET ['action'],'mdp2') !== false  ||  
 				$_GET ['action'] == "ajaxmotdepasseRgpdMDP0" || 
 				$_GET ['action'] == "ajaxmotdepasseRgpdMDPV" ||
+				$_GET ['action'] == "ajaxmotdepasseLostPrestashop" ||
 				$_GET ['action'] == "ajaxmotdepasseLost")) {
+	$langue = 1;
+	if (isset($_POST['mdplostlangue'])) $langue = $_POST['mdplostlangue'];
 	$_SESSION [$_SESSION ['SITE'] ['NAME']] ['USER'] ['CONNECTED'] = false;
 	$aCommunControler = new CommunControler ();
-	echo $aCommunControler->run ();
+	echo $aCommunControler->run ($langue);
 	include ('include/DbDeconnexion.php');
 	die();
 }

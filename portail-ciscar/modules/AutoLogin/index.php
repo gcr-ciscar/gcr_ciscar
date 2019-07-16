@@ -150,7 +150,7 @@ if (isset ( $_GET ['type'] )) {
 								$loginCode = $line [2];
 								$signature = MD5 ( $loginType . $loginCode . $stamp . $clefAutologin ); // MD5 32 CHARS
 								                                                                        // $URL = 'http://commerce.sage.com/ciscar/';
-								$URL = 'http://ecommerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
+								$URL = 'https://ecommerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
 								// $URL = 'http://www.ciscar.fr/ftp/16/coming-soon/new-ecommerce.html';
 								$params = '?action=' . $action;
 								$params .= '&loginCode=' . $loginCode;
@@ -162,7 +162,7 @@ if (isset ( $_GET ['type'] )) {
 									$params .= '&idProduct=' . $_GET ['idProduct'];
 								if (isset ( $_GET ['promo'] ) && $_GET ['promo'] == "on")
 								{
-									$URL = 'http://ecommerce.ciscar.fr/catalogue/catproductlist2.aspx?chkpromo=on';
+									$URL = 'https://ecommerce.ciscar.fr/catalogue/catproductlist2.aspx?chkpromo=on';
 									$params = str_replace('?', '&', $params);
 								}
 								break;
@@ -170,7 +170,7 @@ if (isset ( $_GET ['type'] )) {
 								$loginCode = $line [2];
 								$signature = MD5 ( $loginType . $loginCode . $stamp . $clefAutologin );
 								// $URL = 'http://commerce.sage.com/ciscar/';
-								$URL = 'http://ecommerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
+								$URL = 'https://ecommerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
 								// $URL = 'http://www.ciscar.fr/ftp/16/coming-soon/new-ecommerce.html';
 								$params = '?action=' . $action;
 								$params .= '&loginCode=' . $loginCode;
@@ -183,7 +183,7 @@ if (isset ( $_GET ['type'] )) {
 								$loginCode = $line [2];
 								$signature = MD5 ( $loginType . $loginCode . $stamp . $clefAutologin );
 								// $URL = 'http://commerce.sage.com/ciscar/';
-								$URL = 'http://ecommerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
+								$URL = 'https://ecommerce.ciscar.fr/localisation/ciscar/ciscarin.aspx';
 								// $URL = 'http://www.ciscar.fr/ftp/16/coming-soon/new-ecommerce.html';
 								$params = '?action=' . $action;
 								$params .= '&loginCode=' . $loginCode;
