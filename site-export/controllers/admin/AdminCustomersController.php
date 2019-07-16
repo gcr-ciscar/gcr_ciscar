@@ -121,7 +121,7 @@ class AdminCustomersControllerCore extends AdminController {
 						'title' => $this->l ( 'Enabled' ),
 						'align' => 'text-center',
 						'active' => 'status',
-//<!-- CISCAR on remplace 'type' => 'bool', par 'callback' => 'printSatusIcon' pour envoi mail suite à changement de statut
+//<!-- CISCAR on remplace 'type' => 'bool', par 'callback' => 'printSatusIcon' pour envoi mail suite ï¿½ changement de statut
 //						'type' => 'bool',
 						'callback' => 'printStatusIcon',
 						'orderby' => false,
@@ -565,6 +565,20 @@ class AdminCustomersControllerCore extends AdminController {
 					'label' => $this->l ( 'Marques distribuees' ),
 					'name' => 'website' 
 			);
+//<!-- CISCAR rajout du champ langue -->
+			$languageclass = new LanguageCore();
+			$language = $languageclass->SelectLanguage();
+			$this->fields_form ['input'] [] = array (
+					'type' => 'select',
+					'label' => $this->l ('Langue'),
+					'name' => 'id_lang',
+					'options' => array (
+						'query' => $language,
+						'id' => 'id_lang',
+						'name' => 'name' 
+				),
+			);
+
 			$this->fields_form ['input'] [] = array (
 					'type' => 'text',
 					'label' => $this->l ( 'Allowed outstanding amount' ),
@@ -627,6 +641,7 @@ class AdminCustomersControllerCore extends AdminController {
 			$customer_groups_ids = array_merge ( $customer_groups_ids, $preselected );
 		}
 		
+
 		foreach ( $groups as $group ) {
 			$this->fields_value ['groupBox_' . $group ['id_group']] = Tools::getValue ( 'groupBox_' . $group ['id_group'], in_array ( $group ['id_group'], $customer_groups_ids ) );
 		}
