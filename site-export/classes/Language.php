@@ -826,7 +826,16 @@ class LanguageCore extends ObjectModel {
 		}
 		return true;
 	}
-	
+	public static function SelectLanguage() {
+	   $sql = 'SELECT * FROM `' ._DB_PREFIX_. 'lang`';
+	   
+	  
+	   
+	   $result = Db::getInstance ()->executeS ($sql);
+
+	   return $result;
+
+	}
 	/**
 	 * Load all languages in memory for caching
 	 */
